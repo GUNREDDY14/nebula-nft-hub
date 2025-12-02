@@ -9,21 +9,21 @@ async function main() {
   console.log("Deploying contracts with the account:", deployer.address);
 
   const balance = await hre.ethers.provider.getBalance(deployer.address);
-  console.log("Account balance:", hre.ethers.formatEther(balance), "ETH");
+  console.log("Account balance:", hre.ethers.utils.formatEther(balance), "ETH");
 
   // Deploy NFTMarketplace
   const NFTMarketplace = await hre.ethers.getContractFactory("NFTMarketplace");
   console.log("Deploying NFTMarketplace...");
-  
-  const nftMarketplace = await NFTMarketplace.deploy();
-  await nftMarketplace.waitForDeployment();
 
-  const contractAddress = await nftMarketplace.getAddress();
+  const nftMarketplace = await NFTMarketplace.deploy();
+  await nftMarketplace.deployed(); // <-- CORRECT for ethers v5
+
+  const contractAddress = nftMarketplace.address; // <-- CORRECT for ethers v5
   console.log("NFTMarketplace deployed to:", contractAddress);
 
   // Save contract address and ABI to frontend
   const contractsDir = path.join(__dirname, "..", "src", "contracts");
-  
+
   if (!fs.existsSync(contractsDir)) {
     fs.mkdirSync(contractsDir, { recursive: true });
   }

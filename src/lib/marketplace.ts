@@ -3,21 +3,21 @@ import NFTMarketplaceABI from '@/contracts/NFTMarketplace.json';
 import contractAddress from '@/contracts/contract-address.json';
 
 export interface MarketItem {
-  tokenId: bigint;
+  tokenId: ethers.BigNumber;
   seller: string;
   owner: string;
-  price: bigint;
+  price: ethers.BigNumber;
   sold: boolean;
   isListed: boolean;
 }
 
 export interface Auction {
-  tokenId: bigint;
+  tokenId: ethers.BigNumber;
   seller: string;
-  startingPrice: bigint;
-  highestBid: bigint;
+  startingPrice: ethers.BigNumber;
+  highestBid: ethers.BigNumber;
   highestBidder: string;
-  endTime: bigint;
+  endTime: ethers.BigNumber;
   active: boolean;
   ended: boolean;
 }
@@ -28,7 +28,7 @@ export const getContractAddress = (): string => {
   return contractAddress?.NFTMarketplace || '';
 };
 
-export const getContract = (signerOrProvider: ethers.Signer | ethers.Provider) => {
+export const getContract = (signerOrProvider: ethers.Signer | ethers.providers.Provider) => {
   const address = getContractAddress();
   if (!address) {
     throw new Error('Contract address not found. Please deploy the contract first.');
@@ -36,7 +36,7 @@ export const getContract = (signerOrProvider: ethers.Signer | ethers.Provider) =
   return new ethers.Contract(address, NFTMarketplaceABI.abi, signerOrProvider);
 };
 
-export const getReadOnlyContract = (provider: ethers.Provider) => {
+export const getReadOnlyContract = (provider: ethers.providers.Provider) => {
   return getContract(provider);
 };
 
@@ -47,7 +47,7 @@ export const getSignerContract = (signer: ethers.Signer) => {
 // Minting
 export const mintNFT = async (signer: ethers.Signer, tokenURI: string) => {
   const contract = getSignerContract(signer);
-  const mintingPrice = await contract.getMintingPrice();
+  const mintingPrice: ethers.BigNumber = await contract.getMintingPrice();
   const tx = await contract.mintNFT(tokenURI, { value: mintingPrice });
   const receipt = await tx.wait();
   
@@ -63,7 +63,7 @@ export const mintNFT = async (signer: ethers.Signer, tokenURI: string) => {
   
   if (transferEvent) {
     const parsed = contract.interface.parseLog(transferEvent);
-    return parsed?.args[2]; // tokenId
+    return parsed?.args[2]; // tokenId (BigNumber)
   }
   
   return null;
@@ -76,8 +76,8 @@ export const listItem = async (
   price: string
 ) => {
   const contract = getSignerContract(signer);
-  const listingPrice = await contract.getListingPrice();
-  const priceInWei = ethers.parseEther(price);
+  const listingPrice: ethers.BigNumber = await contract.getListingPrice();
+  const priceInWei = ethers.utils.parseEther(price);
   const tx = await contract.listItemForSale(tokenId, priceInWei, { value: listingPrice });
   return tx.wait();
 };
@@ -86,7 +86,7 @@ export const listItem = async (
 export const buyItem = async (
   signer: ethers.Signer,
   tokenId: number,
-  price: bigint
+  price: ethers.BigNumber
 ) => {
   const contract = getSignerContract(signer);
   const tx = await contract.buyItem(tokenId, { value: price });
@@ -108,7 +108,7 @@ export const createAuction = async (
   duration: number
 ) => {
   const contract = getSignerContract(signer);
-  const priceInWei = ethers.parseEther(startingPrice);
+  const priceInWei = ethers.utils.parseEther(startingPrice);
   const tx = await contract.createAuction(tokenId, priceInWei, duration);
   return tx.wait();
 };
@@ -119,7 +119,7 @@ export const placeBid = async (
   bidAmount: string
 ) => {
   const contract = getSignerContract(signer);
-  const bidInWei = ethers.parseEther(bidAmount);
+  const bidInWei = ethers.utils.parseEther(bidAmount);
   const tx = await contract.placeBid(tokenId, { value: bidInWei });
   return tx.wait();
 };
@@ -142,7 +142,7 @@ export const transferNFT = async (
 };
 
 // Fetch functions
-export const fetchMarketItems = async (provider: ethers.Provider): Promise<MarketItem[]> => {
+export const fetchMarketItems = async (provider: ethers.providers.Provider): Promise<MarketItem[]> => {
   const contract = getReadOnlyContract(provider);
   return contract.fetchMarketItems();
 };
@@ -157,13 +157,13 @@ export const fetchItemsListed = async (signer: ethers.Signer): Promise<MarketIte
   return contract.fetchItemsListed();
 };
 
-export const fetchActiveAuctions = async (provider: ethers.Provider): Promise<Auction[]> => {
+export const fetchActiveAuctions = async (provider: ethers.providers.Provider): Promise<Auction[]> => {
   const contract = getReadOnlyContract(provider);
   return contract.fetchActiveAuctions();
 };
 
 export const getMarketItem = async (
-  provider: ethers.Provider,
+  provider: ethers.providers.Provider,
   tokenId: number
 ): Promise<MarketItem> => {
   const contract = getReadOnlyContract(provider);
@@ -171,7 +171,7 @@ export const getMarketItem = async (
 };
 
 export const getAuction = async (
-  provider: ethers.Provider,
+  provider: ethers.providers.Provider,
   tokenId: number
 ): Promise<Auction> => {
   const contract = getReadOnlyContract(provider);
@@ -179,19 +179,19 @@ export const getAuction = async (
 };
 
 export const getTokenURI = async (
-  provider: ethers.Provider,
+  provider: ethers.providers.Provider,
   tokenId: number
 ): Promise<string> => {
   const contract = getReadOnlyContract(provider);
   return contract.tokenURI(tokenId);
 };
 
-export const getListingPrice = async (provider: ethers.Provider): Promise<bigint> => {
+export const getListingPrice = async (provider: ethers.providers.Provider): Promise<ethers.BigNumber> => {
   const contract = getReadOnlyContract(provider);
   return contract.getListingPrice();
 };
 
-export const getMintingPrice = async (provider: ethers.Provider): Promise<bigint> => {
+export const getMintingPrice = async (provider: ethers.providers.Provider): Promise<ethers.BigNumber> => {
   const contract = getReadOnlyContract(provider);
   return contract.getMintingPrice();
 };

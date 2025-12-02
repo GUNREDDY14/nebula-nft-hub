@@ -67,7 +67,8 @@ export default function MyNFTs() {
 
   const handleTransfer = async () => {
     if (!signer || !transferDialog.tokenId) return;
-    if (!ethers.isAddress(transferAddress)) { toast.error('Please enter a valid wallet address'); return; }
+    // <-- changed to ethers.utils.isAddress for ethers v5 compatibility
+    if (!ethers.utils.isAddress(transferAddress)) { toast.error('Please enter a valid wallet address'); return; }
     try { setActionLoading(transferDialog.tokenId); await transferNFT(signer, transferAddress, transferDialog.tokenId); toast.success('NFT transferred successfully!'); setTransferDialog({ open: false, tokenId: null }); setTransferAddress(''); await loadNFTs(); }
     catch (error: unknown) { const err = error as { reason?: string }; toast.error(err.reason || 'Failed to transfer NFT'); }
     finally { setActionLoading(null); }

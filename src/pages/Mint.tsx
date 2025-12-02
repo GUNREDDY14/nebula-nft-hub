@@ -56,7 +56,7 @@ export default function Mint() {
       toast.success('Metadata uploaded to IPFS');
       setStep('Minting NFT on blockchain...');
       const mintingPrice = await getMintingPrice(provider);
-      toast.info(`Minting fee: ${ethers.formatEther(mintingPrice)} ETH`);
+      toast.info(`Minting fee: ${ethers.utils.formatEther(mintingPrice)} ETH`);
       const tokenId = await mintNFT(signer, tokenURI);
       toast.success(`NFT Minted! Token ID: ${tokenId?.toString()}`);
       setName(''); setDescription(''); setFile(null); setPreview(null); setAttributes([]);

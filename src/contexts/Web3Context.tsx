@@ -1,6 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { ethers } from 'ethers';
-import { toast } from 'sonner';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
+import { ethers } from "ethers";
+import { toast } from "sonner";
 
 interface EthereumProvider {
   isMetaMask?: boolean;
@@ -17,7 +24,7 @@ declare global {
 
 interface Web3ContextType {
   account: string | null;
-  provider: ethers.BrowserProvider | null;
+  provider: ethers.providers.Web3Provider | null;
   signer: ethers.Signer | null;
   chainId: number | null;
   isConnecting: boolean;
@@ -30,15 +37,17 @@ interface Web3ContextType {
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
 
 const SUPPORTED_CHAINS: Record<number, string> = {
-  1: 'Ethereum Mainnet',
-  11155111: 'Sepolia Testnet',
-  80001: 'Mumbai Testnet',
-  31337: 'Localhost',
+  1: "Ethereum Mainnet",
+  11155111: "Sepolia Testnet",
+  80001: "Mumbai Testnet",
+  31337: "Localhost",
 };
 
 export function Web3Provider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<string | null>(null);
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(
+    null
+  );
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -47,38 +56,35 @@ export function Web3Provider({ children }: { children: ReactNode }) {
 
   const connectWallet = useCallback(async () => {
     if (!window.ethereum) {
-      toast.error('MetaMask not detected! Please install MetaMask extension.');
-      window.open('https://metamask.io/download/', '_blank');
+      toast.error("MetaMask not detected! Please install MetaMask.");
+      window.open("https://metamask.io/download/", "_blank");
       return;
     }
 
     setIsConnecting(true);
 
     try {
-      const browserProvider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
-      const accounts = await browserProvider.send('eth_requestAccounts', []);
-      
-      if (accounts.length === 0) {
-        throw new Error('No accounts found');
-      }
+      const web3Provider = new ethers.providers.Web3Provider(
+        window.ethereum as any
+      );
 
-      const network = await browserProvider.getNetwork();
-      const userSigner = await browserProvider.getSigner();
+      const accounts = await web3Provider.send("eth_requestAccounts", []);
 
-      setProvider(browserProvider);
-      setSigner(userSigner);
+      if (accounts.length === 0) throw new Error("No accounts found");
+
+      const signer = web3Provider.getSigner();
+      const network = await web3Provider.getNetwork();
+
+      setProvider(web3Provider);
+      setSigner(signer);
       setAccount(accounts[0]);
-      setChainId(Number(network.chainId));
+      setChainId(network.chainId);
 
-      toast.success('Wallet connected successfully!');
-    } catch (error: unknown) {
-      console.error('Failed to connect wallet:', error);
-      const err = error as { code?: number };
-      if (err.code === 4001) {
-        toast.error('Connection rejected by user');
-      } else {
-        toast.error('Failed to connect wallet');
-      }
+      toast.success("Wallet connected successfully!");
+    } catch (error: any) {
+      console.error(error);
+      if (error.code === 4001) toast.error("User rejected connection");
+      else toast.error("Failed to connect wallet");
     } finally {
       setIsConnecting(false);
     }
@@ -89,65 +95,51 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     setProvider(null);
     setSigner(null);
     setChainId(null);
-    toast.info('Wallet disconnected');
+    toast.info("Wallet disconnected");
   }, []);
 
   const switchNetwork = useCallback(async (targetChainId: number) => {
-    if (!window.ethereum) {
-      toast.error('MetaMask not detected');
-      return;
-    }
+    if (!window.ethereum) return toast.error("MetaMask not detected");
 
     try {
       await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
+        method: "wallet_switchEthereumChain",
         params: [{ chainId: `0x${targetChainId.toString(16)}` }],
       });
-    } catch (error: unknown) {
-      const err = error as { code?: number };
-      if (err.code === 4902) {
-        toast.error('Network not added to MetaMask. Please add it manually.');
-      } else {
-        toast.error('Failed to switch network');
-      }
+    } catch (error: any) {
+      if (error.code === 4902) {
+        toast.error("Network not added to MetaMask.");
+      } else toast.error("Failed to switch network");
     }
   }, []);
 
   useEffect(() => {
     if (!window.ethereum) return;
 
-    const handleAccountsChanged = (accounts: unknown) => {
-      const accs = accounts as string[];
-      if (accs.length === 0) {
-        disconnectWallet();
-      } else if (accs[0] !== account) {
-        setAccount(accs[0]);
-        toast.info('Account changed');
-      }
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length === 0) disconnectWallet();
+      else setAccount(accounts[0]);
     };
 
-    const handleChainChanged = (chainIdHex: unknown) => {
-      const newChainId = parseInt(chainIdHex as string, 16);
-      setChainId(newChainId);
-      toast.info(`Network changed to ${SUPPORTED_CHAINS[newChainId] || 'Unknown'}`);
+    const handleChainChanged = (chainIdHex: string) => {
+      const id = parseInt(chainIdHex, 16);
+      setChainId(id);
       window.location.reload();
     };
 
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
-    window.ethereum.on('chainChanged', handleChainChanged);
+    window.ethereum.on("accountsChanged", handleAccountsChanged);
+    window.ethereum.on("chainChanged", handleChainChanged);
 
-    window.ethereum.request({ method: 'eth_accounts' }).then((accounts) => {
-      const accs = accounts as string[];
-      if (accs.length > 0) {
-        connectWallet();
-      }
+    // auto-connect if wallet already connected
+    window.ethereum.request({ method: "eth_accounts" }).then((accs: any) => {
+      if (accs.length > 0) connectWallet();
     });
 
     return () => {
-      window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
-      window.ethereum?.removeListener('chainChanged', handleChainChanged);
+      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
+      window.ethereum?.removeListener("chainChanged", handleChainChanged);
     };
-  }, [account, connectWallet, disconnectWallet]);
+  }, [connectWallet, disconnectWallet]);
 
   return (
     <Web3Context.Provider
@@ -170,8 +162,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
 
 export function useWeb3() {
   const context = useContext(Web3Context);
-  if (context === undefined) {
-    throw new Error('useWeb3 must be used within a Web3Provider');
-  }
+  if (!context)
+    throw new Error("useWeb3 must be used within a Web3Provider");
   return context;
 }

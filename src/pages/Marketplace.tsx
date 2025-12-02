@@ -4,6 +4,7 @@ import { NFTCard } from '@/components/NFTCard';
 import { fetchMarketItems, buyItem, getTokenURI, MarketItem } from '@/lib/marketplace';
 import { toast } from 'sonner';
 import { Loader2, ShoppingBag } from 'lucide-react';
+import { ethers } from 'ethers';
 
 interface NFTWithURI extends MarketItem {
   tokenURI: string;
@@ -44,7 +45,8 @@ export default function Marketplace() {
     loadMarketItems();
   }, [provider]);
 
-  const handleBuy = async (tokenId: number, price: bigint) => {
+  // <-- changed price type to ethers.BigNumber for ethers v5 compatibility
+  const handleBuy = async (tokenId: number, price: ethers.BigNumber) => {
     if (!signer) {
       toast.error('Please connect your wallet');
       return;
