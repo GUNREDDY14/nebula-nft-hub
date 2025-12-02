@@ -23,8 +23,8 @@ export default function Index() {
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
-              <span className="text-gradient">NexusNFT</span><br />
-              <span className="text-foreground">Marketplace</span>
+              <span className="text-gradient">GunreddyGudem</span><br />
+              <span className="text-foreground">shopping arena</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-slide-up">
               Discover, create, and trade unique digital assets. Mint, buy, sell, auction, and transfer NFTs on the blockchain.
@@ -91,9 +91,9 @@ export default function Index() {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="font-display font-bold text-primary-foreground">N</span>
             </div>
-            <span className="font-display font-bold">NexusNFT</span>
+            <span className="font-display font-bold">gunreddygudem</span>
           </div>
-          <p className="text-sm text-muted-foreground">© 2024 NexusNFT. Built with Solidity & React.</p>
+          <p className="text-sm text-muted-foreground">© 2024 gunreddygudem. Built with Solidity & React.</p>
         </div>
       </footer>
     </div>

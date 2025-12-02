@@ -29,7 +29,7 @@ export function Navbar() {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="font-display font-bold text-primary-foreground">N</span>
             </div>
-            <span className="font-display text-xl font-bold text-gradient">NexusNFT</span>
+            <span className="font-display text-xl font-bold text-gradient">GunreddyGudem</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (

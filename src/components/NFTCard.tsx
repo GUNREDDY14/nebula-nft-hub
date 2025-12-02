@@ -54,7 +54,7 @@ export function NFTCard({ tokenId, tokenURI, price, seller, isListed, isOwned, o
       <CardContent className="p-4">
         <h3 className="font-display text-lg font-semibold truncate">{metadata?.name || `NFT #${tokenId}`}</h3>
         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{metadata?.description || 'No description available'}</p>
-        {price && price > 0n && (<div className="mt-3 flex items-baseline gap-1"><span className="text-2xl font-bold text-gradient">{ethers.formatEther(price)}</span><span className="text-sm text-muted-foreground">ETH</span></div>)}
+        {price && price > 0n && (<div className="mt-3 flex items-baseline gap-1"><span className="text-2xl font-bold text-gradient">{ethers.utils.formatEther(price.toString())}</span><span className="text-sm text-muted-foreground">ETH</span></div>)}
         {seller && <p className="mt-2 text-xs text-muted-foreground">Seller: {seller.slice(0, 6)}...{seller.slice(-4)}</p>}
       </CardContent>
       <CardFooter className="p-4 pt-0 gap-2">
